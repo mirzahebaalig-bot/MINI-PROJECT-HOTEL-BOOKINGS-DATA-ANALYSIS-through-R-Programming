@@ -1,0 +1,162 @@
+---
+title: "MINI PROJECT  HOTEL BOOKINGS DATA ANALYSIS"
+author: "Heba"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+### Objective:
+
+The objective of this analysis is to understand hotel booking behavior by exploring lead time, market segments, and booking patterns across different hotel types. This report demonstrates data cleaning, transformation, visualization, and reporting using R.
+
+
+### Load Required Packages in console:
+install.packages(c("tidyverse", "skimr", "janitor", "lubridate"))
+
+### Use them:
+
+```{r}
+library(tidyverse)
+
+library(skimr)
+
+library(janitor)
+
+library(lubridate)
+
+```
+
+
+### Import the Dataset
+```{r}
+hotel_bookings <- read_csv("hotel_bookings.csv")
+```
+
+Understand the Data:
+```{r}
+head(hotel_bookings)
+
+glimpse(hotel_bookings)
+
+skim_without_charts(hotel_bookings)
+```
+
+This step helps identify data types, missing values, and overall structure before cleaning.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Data Cleaning
+
+```{r}
+hotel_bookings_clean <- hotel_bookings %>%
+  clean_names() %>%
+  select(
+    hotel,
+    is_canceled,
+    lead_time,
+    children,
+    market_segment,
+    arrival_date_year
+  )
+  
+```
+
+Explanation:
+
+clean_names() standardizes column names
+
+select() keeps only relevant variables
+
+
+
+### Data Transformation:
+```{r ggplot}
+hotel_bookings_clean <- hotel_bookings_clean %>%
+  mutate(
+    has_children = children > 0
+  )
+``` 
+ 
+
+Explanation:
+A new logical variable has_children was created to identify bookings with children.
+
+
+
+### Summary Analysis - 
+Average Lead Time by Hotel Type:
+
+```{r}
+lead_time_summary <- hotel_bookings_clean %>%
+  group_by(hotel) %>%
+  summarize(
+    avg_lead_time = mean(lead_time, na.rm = TRUE),
+    max_lead_time = max(lead_time, na.rm = TRUE)
+  )
+
+```
+
+Insight: City hotels tend to have a higher average lead time, indicating earlier bookings compared to resort hotels.
+
+
+
+## Visualization 1: Lead Time vs Number of Children
+
+```{r}
+ggplot(hotel_bookings_clean) +
+  geom_point(
+    aes(x = lead_time, y = children),
+    alpha = 0.3
+  ) +
+  facet_wrap(~hotel) +
+  labs(
+    title = "Lead Time vs Number of Children",
+    x = "Lead Time (Days)",
+    y = "Number of Children"
+  )
+```
+
+
+### Data Time Range:
+```{r}
+min_year <- min(hotel_bookings_clean$arrival_date_year)
+max_year <- max(hotel_bookings_clean$arrival_date_year)
+```
+
+## Visualization 2: Market Segment Distribution
+```{r}
+ggplot(hotel_bookings_clean) +
+  geom_bar(
+    aes(x = market_segment, fill = hotel)
+  ) +
+  labs(
+    title = "Market Segment Distribution by Hotel Type",
+    x = "Market Segment",
+    y = "Number of Bookings", 
+    caption = paste0("Data from ", min_year, " to ", max_year)
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+### Saving a Plot:
+```{r}
+ggsave("hotel_booking_analysis.png", width = 16, height = 8)
+```
+
+
+### Key Insights:
+- City hotels generally receive bookings earlier than resort hotels
+- Market segments differ significantly by hotel type
+- Visualization reveals patterns not obvious from summary statistics
+
+
+### Conclusion:
+
+This analysis demonstrates how R can be used to clean, transform, analyze, and visualize real-world data. Using tidyverse tools and ggplot2, meaningful insights were derived from hotel booking data. The use of R Markdown ensures that the analysis is transparent, reproducible, and easy to share.
